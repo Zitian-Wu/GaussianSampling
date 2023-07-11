@@ -1,0 +1,14 @@
+Package: GaussianSampling
+Type: Package
+Title: High-Dimensional Gaussian Sampling
+Version: 1.0
+Date: 2023-04-06
+Author: Zitian Wu
+Maintainer: Zitian <zitianwu@ufl.edu>
+Description: Based on the algorithm in, arXiv:2010.01510 [stat.CO].
+License: GPL-2
+Encoding: UTF-8
+LazyData: true
+RoxygenNote: 7.2.3
+Imports: Rcpp (>= 1.0.10)
+LinkingTo: Rcpp, RcppArmadillo

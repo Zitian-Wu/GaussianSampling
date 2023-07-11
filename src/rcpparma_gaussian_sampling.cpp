@@ -1,0 +1,756 @@
+// -*- mode: C++; c-indent-level: 4; c-basic-offset: 4; indent-tabs-mode: nil; -*-
+
+#include "RcppArmadillo.h"
+
+// [[Rcpp::depends(RcppArmadillo)]]
+
+
+
+//' Box-muller
+//'
+//' Drawing univariate Gaussian random variables with mean mu in R and precision q > 0.
+//' The function transforms a pair of independent uniform random variables into a pair
+//' of Gaussian random variables by exploiting the radial symmetry of the
+//' two-dimensional normal distribution.
+//'
+//' @param mu is mean of the distribution, one-dimensional.
+//' @param q is precision of the distribution, one-dimensional.
+//' @examples box_muller(0,1)
+//' @export(box_muller)
+// [[Rcpp::export(box_muller)]]
+arma::colvec C_box_muller(int &mu, int &q) { // Box Muller sampler, univariate Gaussian sampling
+  arma::vec u = arma::randu<arma::vec>(2);
+  int u1 = sqrt(-2 * log(u[0]));
+  int u2 = 2 * 3.14 * u[1];
+  arma::vec theta = arma::zeros<arma::vec>(2);
+  theta[0] = mu + u1/q*sin(u2);
+  theta[1] = mu + u1/q*cos(u2);
+
+  return theta;
+}
+
+
+//' Multivariate Gaussian sampling with diagonal precision matrix
+//'
+//' To generate a d-dimensional Gaussian vector theta with mean mu and diagonal precision matrix Q
+//'
+//' @param mu is mean, d-dimensional.
+//' @param Q is diagonal precision matrix.
+//' @examples GSdiag((rep(1,5),diag(2,5,5)))
+//' @export(GSdiag)
+// [[Rcpp::export(GSdiag)]]
+arma::colvec C_GSdiag(arma::vec &mu, arma::mat &Q){ // when Q is a diagonal matrix
+  int d = mu.n_elem;
+  arma::colvec q = arma::diagvec(Q);
+
+  arma::vec theta = arma::zeros<arma::vec>(d);
+  for(int i=1; i<=d; i++){
+    theta[i-1] = arma::randn(arma::distr_param(mu[i-1],q[i-1]));
+  }
+
+  return theta;
+}
+
+
+//' Multivariate Gaussian sampling with sparse or band matrix Q
+//'
+//' To generate a d-dimensional Gaussian vector theta with mean mu and band precision matrix Q
+//'
+//' @param mu is mean, d-dimensional.
+//' @param Q is band precision matrix.
+//' @param b is bandwidth
+//' @examples
+//' Q <- diag(2,10,10); Q[4,1]<-Q[1,4]<-1;
+//' GSband(rep(1,10),Q,3)
+//' @export(GSband)
+// [[Rcpp::export(GSband)]]
+arma::colvec C_GSband(arma::vec &mu, arma::mat &Q, int &b){ // when Q is a band matrix with width b
+  int d = mu.n_elem;
+  arma::mat C = chol(Q, "lower");
+  arma::vec z = arma::randn(d);
+  arma::vec w = arma::zeros<arma::vec>(d);
+
+  w = arma::solve(C.t(), z, arma::solve_opts::fast);
+
+  arma::vec theta = mu + w;
+
+  return theta;
+}
+
+
+//' Multivariate Gaussian sampling with block circulant (Toeplitz) matrix Q
+//'
+//' Q is a block circulant matrix, then the sampling can be performed in the Fourier domain.
+//'
+//' @param mu is mean, d-dimensional.
+//' @param a is vector built by stacking the first columns associated to the Q.
+//' @param M is number of different blocks.
+//' @param N is dimension of each block.
+//' @examples
+//' mu=rep(0,2); a=matrix(c(1,0),2,1); M=1; N=2;
+//' GScirculant(mu, a, N, M)
+//' @export(GScirculant)
+// [[Rcpp::export(GScirculant)]]
+arma::colvec C_GScirc(arma::vec &mu, arma::mat &a, int &N, int &M){ // when Q is a block circulant matrix
+  int d = mu.n_elem;
+
+  arma::cx_mat lambda;
+  if(M==1) {
+   lambda = fft(a);
+  }
+  else {
+   lambda = fft2(a);
+  }
+  arma::vec z = arma::randn(d);
+
+  arma::vec theta = real(ifft(fft(mu) + fft(z) % sqrt(lambda)));
+
+  return theta;
+}
+
+
+//' Cholesky Factorization Sampler
+//'
+//' Sampling based on the Cholesky decomposition on Q.
+//'
+//' @param mu is mean, d-dimensional.
+//' @param Q is arbitrary precision matrix.
+//' @examples
+//' mu <- 1:10
+//' Q <- diag(2,10,10); Q[4,1]<-Q[1,4]<-1;
+//' GSchol(mu, Q)
+//' @export(GSchol)
+// [[Rcpp::export(GSchol)]]
+arma::colvec C_GSchol(arma::vec &mu, arma::mat &Q){ // Cholesky sampler
+  int d = mu.n_elem;
+  arma::mat C = chol(Q, "lower");
+  arma::vec z = arma::randn(d);
+  arma::vec w = arma::zeros<arma::vec>(d);
+
+  w = arma::solve(C.t(), z);
+
+  arma::vec theta = mu + w;
+
+  return theta;
+}
+
+
+//' Square Root Factorization Sampler
+//'
+//' Useless
+//'
+//' @param mu is mean, d-dimensional.
+//' @param Q is arbitrary precision matrix.
+//' @examples
+//' mu <- 1:10
+//' Q <- diag(2,10,10); Q[4,1]<-Q[1,4]<-1;
+//' GSsqrt(mu, Q)
+//' @export(GSsqrt)
+// [[Rcpp::export(GSsqrt)]]
+arma::colvec C_GSsqrt(arma::vec &mu, arma::mat &Q){ // Square root factorization, but useless
+  int d = mu.n_elem;
+  arma::mat C = chol(Q, "lower");
+
+  arma::mat U; arma::vec s; arma::mat V;
+  svd(U,s,V,C);
+
+  arma::mat B = U * diagmat(s) * U.t();
+
+  arma::vec z = arma::randn(d);
+  arma::vec w = arma::zeros<arma::vec>(d);
+  w = arma::solve(B, z, arma::solve_opts::fast);
+
+  arma::vec theta = mu + w;
+
+  return theta;
+}
+
+
+//' Chebyshev Polynomials Sampler
+//'
+//' Approx. square root sampler using Chebyshev polynomials
+//'
+//' @param mu is mean, d-dimensional.
+//' @param Q is arbitrary precision matrix.
+//' @param K is the order of the Chebyshev series.
+//' @examples
+//' mu <- 1:10
+//' Q <- diag(2,10,10); Q[4,1]<-Q[1,4]<-1;
+//' GScheby(mu, Q, 10)
+//' @export(GScheby)
+// [[Rcpp::export(GScheby)]]
+arma::colvec C_GScheby(arma::vec &mu, arma::mat &Q, float &K){ // Approx. square root sampler using Chebyshev polynomials
+  // K is the order of the Chebyshev series
+  int d = mu.n_elem;
+
+  float lambda_l = 0;
+  float lambda_u = sum(abs(Q), 1).max();
+
+  arma::vec g = arma::zeros<arma::vec>(K+1);
+  for(int j=0; j<=K; j++){ // Do the change of interval.
+    g[j] = 1 / sqrt(cos(3.14 *(2*j+1)/2/K) * (lambda_u-lambda_l)/2 + (lambda_u+lambda_l)/2);
+  }
+
+  arma::vec c = arma::zeros<arma::vec>(K+1);
+  arma::vec ind = arma::linspace(0, K, K+1);
+  for(int k=0; k<=K; k++){ // Compute coefficients of the K-truncated Chebyshev series.
+    c[k] = 2/K * sum(g % cos(k*3.14/2/K*(2*ind+1)));
+  }
+
+  arma::vec z = arma::randn(d);
+  float alpha = 2 / (lambda_u-lambda_l);
+  float beta = (lambda_u+lambda_l) / (lambda_u-lambda_l);
+
+  arma::vec u0 = z;
+  arma::vec u1 = alpha * Q * z - beta * z;
+  arma::vec u = c[0] * u0 / 2 + c[1] * u1;
+  int k = 2;
+
+  while(k <= K){ // Compute the K-truncated Chebyshev series.
+    arma::vec uk = 2 * (alpha * Q * u1 - beta * u1) - u0;
+    u += c[k] * uk;
+    u0 = u1;
+    u1 = uk;
+    k++;
+  }
+
+  arma::vec theta = mu + u; // Build the Gaussian vector of interest.
+
+  return theta;
+}
+
+
+//' Lanczos Decomposition Sampler
+//'
+//' Approx. square root sampler using Lanczos decomposition
+//'
+//' @param mu is mean, d-dimensional.
+//' @param Q is arbitrary precision matrix.
+//' @param K is the dimension of Krylov subspace
+//' @examples
+//' mu <- 1:10
+//' Q <- diag(2,10,10); Q[4,1]<-Q[1,4]<-1;
+//' GSlanczos(mu, Q, 10)
+//' @export(GSlanczos)
+// [[Rcpp::export(GSlanczos)]]
+arma::colvec C_GSlanczos(arma::vec &mu, arma::mat &Q, double &K){ // Approx. square root sampler using Lanczos decomposition
+  // K is the dimension of Krylov subspace
+  int d = mu.n_elem;
+  arma::vec z = arma::randn(d);
+  arma::vec r0 = z;
+  arma::mat h = arma::zeros(d, K+2);
+  arma::vec beta = arma::zeros(K+2);
+  arma::vec alpha = arma::zeros(K+2);
+
+  beta(0) = sqrt(sum(r0 % r0));
+  h.col(1) = r0 / beta(0);
+
+  arma::vec w;
+  for(int k=1; k<=K; k++) {
+    w = Q * h.col(k) - beta(k-1) * h.col(k-1);
+    alpha(k) = sum(w % h.col(k));
+    w -= alpha(k) * h.col(k); // Gram-Schmidt orthogonalization process.
+    beta(k) = sqrt(sum(w % w));
+    h.col(k+1) = w / beta(k);
+  }
+
+  arma::mat T = arma::zeros(K,K);
+  T.diag() = alpha.subvec(1,K);
+  for(int i=1; i<K; i++) {
+    T(i-1,i) = T(i,i-1) = beta(i);
+  }
+  T = (T + T.t()) / 2;
+
+  // vec eigval;
+  // mat eigvec;
+  // eig_sym(eigval, eigvec, T);
+
+  arma::mat T_inv_sqrt = real(sqrtmat(pinv(T)));// eigvec * diagmat(1/sqrt(eigval)) * eigvec.t();
+
+  arma::mat H = h.cols(1,K);
+  arma::vec e1 = arma::zeros(K); e1(0) = 1;
+
+  arma::vec theta = mu + beta(0) * H * T_inv_sqrt * e1; // Build the Gaussian vector of interest.
+
+  return theta;
+}
+
+
+//' Conjugate Gradient Sampler
+//'
+//' Approx. square root sampler using Lanczos decomposition
+//'
+//' @param mu is mean, d-dimensional.
+//' @param Q is arbitrary precision matrix.
+//' @param epsilon is the tolerance threshold used to stop the conjugate gradient sampler.
+//' @param omega0 is initialization.
+//' @examples
+//' mu <- 1:10
+//' Q <- diag(2,10,10); Q[4,1]<-Q[1,4]<-1;
+//' GSCG(mu,Q,1e-4,rep(0,10))
+//' @export(GSCG)
+// [[Rcpp::export(GSCG)]]
+arma::colvec C_GSCG(arma::vec &mu, arma::mat &Q, double &epsilon, arma::vec &omega0){ // Conjugate gradient sampler
+  int d = mu.n_elem;
+  int k = 1;
+
+  arma::vec r_old = arma::randn(d) - Q * omega0;
+  double error_old = sum(r_old % r_old);
+  arma::vec h_old = r_old;
+
+  arma::vec Qh = Q * h_old;
+  double d_old = sum(h_old % Qh);
+
+  arma::vec yk = omega0;
+
+  arma::vec r_new, h_new;
+  r_new = arma::ones(d);
+  double d_new, gamma, etak, error_new, z, loss_conj;
+
+  while(sqrt(error_old) >= epsilon && k <= d) {
+    gamma = error_old / d_old;
+
+    z = arma::randn();
+    yk += z / sqrt(d_old) * h_old;
+
+    r_new = r_old - gamma * Qh;
+
+    error_new = sum(r_new % r_new);
+    etak = - error_new / error_old;
+
+    h_new = r_new - etak * h_old;
+
+    Qh = Q * h_new;
+    d_new = sum(h_new % Qh);
+
+    loss_conj = sum(h_old % Qh);
+    if(loss_conj > 1e-4) {
+      std::cout<< "loss of conjugacy happened at iteration k = " << k << "\n";
+    }
+
+    r_old = r_new;
+    h_old = h_new;
+    d_old = d_new;
+    error_old = error_new;
+
+    k++;
+  }
+
+  arma::vec theta = mu + yk;
+
+  return theta;
+}
+
+
+//' Component-wise Gibbs sampler
+//'
+//' To sequentially draw one component of  given the others.
+//'
+//' @param mu is mean, d-dimensional.
+//' @param Q is arbitrary precision matrix.
+//' @param total_itr is the total itration of Gibbs sampler
+//' @param theta0 is initialization.
+//' @examples
+//' mu <- 1:10
+//' Q <- diag(2,10,10); Q[4,1]<-Q[1,4]<-1;
+//' GSgibbs(mu,Q,1000,rep(0,10))
+//' @export(GSgibbs)
+// [[Rcpp::export(GSgibbs)]]
+arma::colvec C_GSgibbs(arma::vec &mu, arma::mat &Q, int &total_itr, arma::vec &theta0){ // Component-wise Gibbs sampler
+  int d = mu.n_elem;
+  int k = 1;
+
+  arma::vec theta_new = theta0;
+  arma::vec theta_old = theta_new;
+
+  double z;
+  while (k <= total_itr) {
+    for (int i=0; i<d; i++) {
+      theta_old = theta_new;
+      z = arma::randn();
+      theta_new(i) = sum(Q.row(i) % mu.t()) / Q(i,i) + z / sqrt(Q(i,i))
+        - (sum(Q.row(i)%theta_old.t()) - Q(i,i)*theta_old(i)) / Q(i,i);
+    }
+
+    k++;
+  }
+
+  return theta_new;
+}
+
+
+//' MCMC sampler based on exact matrix splitting
+//'
+//' A perturbed instance of Matrix Splitting schemes which are a class of linear iterative solvers based on the splitting of Q into Q = M - N.
+//'
+//' @param mu is mean, d-dimensional.
+//' @param Q is arbitrary precision matrix.
+//' @param total_itr is the total itration of Gibbs sampler
+//' @param theta0 is initialization.
+//' @param method is matrix splitting approach to choose within "Gauss-Seidel", "Richardson", "Jacobi", "SOR".
+//' @examples
+//' mu <- 1:10
+//' Q <- diag(2,10,10); Q[4,1]<-Q[1,4]<-1;
+//' GSMS(mu,Q,100,rep(0,10), "SOR")
+//' @export(GSMS)
+// [[Rcpp::export(GSMS)]]
+arma::colvec C_GSMS(arma::vec &mu, arma::mat &Q, int &total_itr, arma::vec &theta0, std::string &method){ // MCMC sampler based on exact matrix splitting
+  int d = mu.n_elem;
+  int k = 1;
+
+  arma::vec theta_new = theta0;
+  arma::vec theta_old = theta_new;
+
+  if (method == "Gauss-Seidel" || method == "gauss-seidel" || method == "Gauss-seidel") {
+    // Matrix Splitting
+    arma::mat M = trimatl(Q);
+    arma::mat N = - trimatl(Q, -1).t();
+    arma::vec D = Q.diag();
+
+    // Gibbs Sampling
+    arma::vec z;
+    arma::vec Qmu = Q*mu;
+    while (k <= total_itr) {
+      theta_old = theta_new;
+      z = arma::randn(d) % sqrt(D);
+      theta_new = solve(trimatl(M), Qmu + z + N*theta_old); // indicate M is triangular
+
+      k++;
+    }
+
+    return theta_new;
+  } else if (method == "Richardson" || method == "richardson") {
+    // Matrix Splitting
+    arma::vec eigval;
+    arma::mat eigvec;
+    eig_sym(eigval, eigvec, Q);
+
+    double omega = 2 / (max(abs(eigval)) + min(abs(eigval))); // convergence: omega <= 2 / ||Q||
+
+    arma::mat M = arma::eye(d,d) / omega;
+    arma::mat N = M - Q;
+    arma::mat Q_z = arma::inv_sympd(M + N);
+
+    // Gibbs Sampling
+    arma::vec z, Qmu = Q*mu;
+    while (k <= total_itr) {
+      theta_old = theta_new;
+      arma::vec mu_z = arma::zeros<arma::vec>(d);
+      z = C_GSchol(mu_z,Q_z);
+      theta_new = arma::solve(diagmat(M), Qmu + z + N*theta_old, arma::solve_opts::fast); // indicate M is triangular
+
+      k++;
+    }
+
+    return theta_new;
+  } else if (method == "Jacobi" || method == "jacobi") {
+    // Matrix Splitting
+    arma::mat M = arma::diagmat(Q);
+    arma::mat N = M - Q;
+    arma::mat Q_z = arma::inv_sympd(M + N);
+
+    // Check if Q is strictly diagonally dominant (Convergence)
+    arma::mat D = Q.diag();
+    if (sum(D > sum(abs(Q), 1) - D)!=d) {
+      std::cout << "The precision matrix Q is not strictly diagonally dominant. The Gibbs sampler does not converge." << std::endl;
+    }
+
+    // Gibbs Sampling
+    arma::vec z, Qmu = Q*mu;
+    while (k <= total_itr) {
+      theta_old = theta_new;
+      arma::vec mu_z = arma::zeros<arma::vec>(d);
+      z = C_GSchol(mu_z,Q_z);
+      theta_new = arma::solve(arma::diagmat(M), Qmu + z + N*theta_old, arma::solve_opts::fast); // indicate M is triangular
+
+      k++;
+    }
+
+    return theta_new;
+  } else if (method == "SOR" || method == "sor") {
+    // Set omega
+    arma::mat D = Q.diag();
+    arma::mat L = arma::trimatl(Q, -1);
+    double omega; // convergence: 0 < omega < 2
+    if (sum(D > sum(abs(Q), 1) - D)!=d) {
+      omega = 1.7; // The precision matrix Q is not strictly diagonally dominant.
+      // A default value has been set for the relaxation parameter omega = 1.7
+    } else {
+      arma::mat J = arma::eye(d,d) - Q % (arma::inv(arma::diagmat(D)));
+      arma::vec eigval;
+      arma::mat eigvec;
+      arma::eig_sym(eigval, eigvec, J);
+
+      omega = 2 / (1 + sqrt(1 - pow(max(abs(eigval)), 2)));
+    }
+
+    // Matrix Splitting
+    arma::mat M = arma::diagmat(Q) / omega + L;
+    arma::mat N = arma::diagmat(Q) * (1-omega) / omega - L.t();
+
+    // Gibbs Sampling
+    arma::vec z, Qmu = Q*mu;
+    while (k <= total_itr) {
+      theta_old = theta_new;
+      z = arma::randn(d) % sqrt(D) * sqrt((2-omega)/omega);
+      theta_new = solve(trimatl(M), Qmu + z + N*theta_old); // indicate M is triangular
+
+      k++;
+    }
+
+    return theta_new;
+  } else{
+    std::cout << "method = Gauss-Seidel, Richardson, Jacobi or SOR." << std::endl;
+  }
+}
+
+
+//' Chebyshev accelerated SSOR sampler
+//'
+//' an accelerated version of exact matrix splitting sampler based on the SSOR splitting
+//'
+//' @param mu is mean, d-dimensional.
+//' @param Q is arbitrary precision matrix.
+//' @param total_itr is the total itration of Gibbs sampler
+//' @param theta0 is initialization.
+//' @examples
+//' mu <- 1:10
+//' Q <- diag(2,10,10); Q[4,1]<-Q[1,4]<-1;
+//' GSMS_ssor(mu,Q,100,rep(0,10))
+//' @export(GSMS_ssor)
+// [[Rcpp::export(GSMS_ssor)]]
+arma::colvec C_GSMS_ssor(arma::vec &mu, arma::mat &Q, int &total_itr, arma::vec &theta0){ // Chebyshev accelerated SSOR sampler
+  int d = mu.n_elem;
+
+  arma::vec theta_new = theta0;
+  arma::vec theta_old_1 = theta_new;
+  arma::vec theta_old_2 = theta_old_1;
+
+  // Set omega
+  arma::mat D_vec = Q.diag();
+  arma::mat D = arma::diagmat(Q);
+  arma::mat L = arma::trimatl(Q, -1);
+  double omega; // convergence: 0 < omega < 2
+  if (sum(D_vec > sum(abs(Q), 1) - D_vec)!=d) {
+    omega = 1.5; // The precision matrix Q is not strictly diagonally dominant.
+    // A default value has been set for the relaxation parameter omega = 1.5
+  } else {
+    arma::mat J = inv(diagmat(D)) * (Q - D);
+    arma::vec eigval;
+    arma::mat eigvec;
+    arma::eig_sym(eigval, eigvec, J);
+
+    omega = 2 / (1 + sqrt(1 - pow(max(abs(eigval)), 2)));
+  }
+
+  // Matrix Splitting
+  arma::mat M = D / omega + L;
+  arma::mat N = D * (1-omega) / omega - L.t();
+  arma::mat D_omega = (2/omega-1) * D;
+
+  // Find extremal eigenvalues of inv(M_ssor) * Q
+  arma::mat D_inv = arma::inv(D);
+  arma::mat M_ssor = (omega/(2-omega)) * M * D_inv * M.t();
+  arma::mat Minv_Q = arma::inv_sympd(M_ssor) * Q;
+
+  arma::vec eigval;
+  arma::mat eigvec;
+  arma::eig_sym(eigval, eigvec, Minv_Q);
+
+  double lambda_max = max(eigval);
+  double lambda_min = min(eigval);
+
+  // Initialization
+  double delta = pow((lambda_max-lambda_min)/4, 2),
+    tau = 2 / (lambda_max + lambda_min),
+    beta = 2 * tau,
+    alpha = 1,
+    e = 2 / alpha - 1,
+    c = (2 / tau - 1) * e,
+    kappa = tau;
+
+  int t = 1;
+  arma::vec z, y, x;
+  while (t <= total_itr) {
+    z = arma::randn(d);
+    y = arma::solve(arma::trimatl(M), sqrt(e)*sqrt(D_omega)*z - Q*theta_old_1);
+    x = theta_old_1 + y;
+
+    z = arma::randn(d);
+    y = arma::solve(arma::trimatu(M.t()), sqrt(c)*sqrt(D_omega)*z - Q*x);
+    x = x - theta_old_1 + y;
+
+    if (t == 1) {
+      theta_new = alpha * (theta_old_1 + tau * x);
+    } else {
+      theta_new = alpha * (theta_old_1 - theta_old_2 + tau * x) + theta_old_2;
+    }
+
+    beta = 1 / (1/tau - beta*delta);
+    alpha = beta / tau;
+    e = 2 * kappa * (1-alpha) / beta + 1;
+    c = 2 / tau - 1 + (e-1) * (1/tau + 1/kappa - 1);
+    kappa = beta + (1-alpha) * kappa;
+
+    theta_old_2 = theta_old_1;
+    theta_old_1 = theta_new;
+    t++;
+  }
+  theta_new += mu;
+
+  return theta_new;
+}
+
+
+//' MCMC sampler based on approximate matrix splitting
+//'
+//' MCMC samplers whose invariant distributions are approximations
+//'
+//' @param mu is mean, d-dimensional.
+//' @param Q is arbitrary precision matrix.
+//' @param total_itr is the total itration of Gibbs sampler
+//' @param theta0 is initialization.
+//' @param method is matrix splitting approach to choose within "Clone" and "Hogwild".
+//' @examples
+//' mu <- 1:10
+//' Q <- diag(2,10,10); Q[4,1]<-Q[1,4]<-1;
+//' GSAMS(mu,Q,500,rep(0,10),1, "Hogwild")
+//' @export(GSAMS)
+// [[Rcpp::export(GSAMS)]]
+arma::colvec C_GSAMS(arma::vec &mu, arma::mat &Q, int &total_itr, arma::vec &theta0, double &omega, std::string &method){ // MCMC sampler based on approximate matrix splitting
+  int d = mu.n_elem;
+
+  arma::vec theta_new = theta0;
+  arma::vec theta_old = theta_new;
+
+  if (method == "Clone-MCMC" || method == "Clone") {
+    // Matrix Splitting
+    arma::mat M = arma::diagmat(Q) + 2*omega*arma::eye(d,d);
+    arma::mat N = M - Q;
+
+    int t = 1;
+    arma::vec z;
+    while (t <= total_itr) {
+      theta_old = theta_new;
+      z = arma::randn(d) % sqrt(M.diag()) * sqrt(2);
+      theta_new = (Q*mu + z + N*theta_old) / M.diag();
+
+      t++;
+    }
+
+    return theta_new;
+  } else if (method == "Hogwild") {
+    // Matrix Splitting
+    arma::mat M = arma::diagmat(Q);
+    arma::mat N = M - Q;
+
+    int t = 1;
+    arma::vec z;
+    while (t <= total_itr) {
+      theta_old = theta_new;
+      z = arma::randn(d) % sqrt(M.diag());
+      theta_new = (Q*mu + z + N*theta_old) / M.diag();
+
+      t++;
+    }
+
+    return theta_new;
+  }
+
+}
+
+
+//' Gibbs sampler based on exact data augmentation
+//'
+//' MCMC samplers whose invariant distributions are approximations
+//'
+//' @param mu mu is mean, d-dimensional.
+//' @param Q1 Q = Q1 + Q2.
+//' @param G1 Q1 = G1T * Lambda1 * G1
+//' @param Lambda1 Q1 = G1T * Lambda1 * G1
+//' @param total_itr total_itr is the total itration of Gibbs sampler
+//' @param theta0 theta0 is initialization.
+//' @param method method is matrix splitting approach to choose within "EDA" and "GEDA".
+//' @param omega omega is less than the inverse of spectral norm of Q1
+//' @examples
+//' mu <- 1:10
+//' Q <- diag(2,10,10);
+//' Q2 <- diag(1,10,10);
+//' Q1 <- diag(1,10,10);
+//' Lambda1 <- diag(eigen(Q1)$values)
+//' G1 <- t(matrix(eigen(Q1)$vectors,10,10))
+//' GSDA(mu,Q1,G1,Lambda1,10,rep(0,10),"GEDA", 1)
+//' @export(GSDA)
+// [[Rcpp::export(GSDA)]]
+arma::colvec C_GSDA(arma::vec &mu, arma::mat &Q1, arma::mat &G1, arma::mat &Lambda1, int &total_itr, arma::vec &theta0, std::string &method, double &omega){ // Gibbs sampler based on exact data augmentation
+  int d = mu.n_elem;
+  int t = 1;
+  arma::mat Q2 = G1.t() * Lambda1 * G1;
+  arma::mat Q = Q1 + Q2;
+
+  arma::vec theta_new = theta0;
+  arma::vec theta_old = theta_new;
+
+  arma::mat R = arma::eye(d,d) / omega - Q1;
+
+  if (method == "EDA" || method == "eda") {
+    arma::vec u1, z, mu_zeros;
+    arma::mat Q_u1, Q_theta;
+    double lambda_u;
+    while(t <= total_itr) {
+      // Sample the auxiliary variable u1
+      Q_u1 = R;
+      u1 = C_GSchol(theta_old, Q_u1);
+
+      // Sample the variable of interest theta
+      Q_theta = arma::eye(d,d) / omega + Q2;
+      mu_zeros = arma::zeros(d);
+      z = C_GSchol(mu_zeros, Q_theta);
+
+      theta_new = z + inv(Q_theta) * (R*u1 + Q*mu);
+
+      t++;
+    }
+    return theta_new;
+  } else if (method == "GEDA" || method == "geda") {
+    arma::vec u1 = arma::zeros(d), z, u2, mu_u2, mu_zeros;
+    arma::mat Q_u1, Q_theta;
+    double lambda_u;
+    while(t <= total_itr) {
+      // Sample the auxiliary variable u2
+      mu_u2 = G1*u1;
+      u2 = C_GSchol(mu_u2, Lambda1);
+
+      // Sample the auxiliary variable u1
+      Q_u1 = arma::eye(d,d) / omega;
+      mu_zeros = arma::zeros(d);
+      u1 = C_GSchol(mu_zeros, Q_u1);
+      u1 -= omega * (Q1*theta_old - G1.t()*inv(Lambda1)*u2);
+
+      // Sample the variable of interest theta
+      Q_theta = arma::eye(d,d) / omega + Q2;
+      z = C_GSchol(mu_zeros, Q_theta);
+
+      theta_new = z + arma::inv(Q_theta) * (R*u1 + Q*mu);
+
+      t++;
+    }
+    return theta_new;
+  }
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

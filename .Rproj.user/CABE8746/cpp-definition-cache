@@ -1,0 +1,149 @@
+[
+    {
+        "file": "C:/Users/37810/OneDrive/UF/2023spring/capstone/Package/package2/GaussianSampling/src/rcpparma_gaussian_sampling.cpp",
+        "file_last_write": 1680842335.0,
+        "definitions": [
+            {
+                "usr": "c:@F@C_box_muller#&I#S0_#",
+                "kind": 6,
+                "parent_name": "",
+                "name": "C_box_muller(int &, int &)",
+                "file": "C:/Users/37810/OneDrive/UF/2023spring/capstone/Package/package2/GaussianSampling/src/rcpparma_gaussian_sampling.cpp",
+                "line": 21,
+                "column": 14,
+                "hidden": false
+            },
+            {
+                "usr": "c:@F@C_GSdiag#&$@N@arma@S@Col>#d#&$@N@arma@S@Mat>#d#",
+                "kind": 6,
+                "parent_name": "",
+                "name": "C_GSdiag(arma::vec &, arma::mat &)",
+                "file": "C:/Users/37810/OneDrive/UF/2023spring/capstone/Package/package2/GaussianSampling/src/rcpparma_gaussian_sampling.cpp",
+                "line": 42,
+                "column": 14,
+                "hidden": false
+            },
+            {
+                "usr": "c:@F@C_GSband#&$@N@arma@S@Col>#d#&$@N@arma@S@Mat>#d#&I#",
+                "kind": 6,
+                "parent_name": "",
+                "name": "C_GSband(arma::vec &, arma::mat &, int &)",
+                "file": "C:/Users/37810/OneDrive/UF/2023spring/capstone/Package/package2/GaussianSampling/src/rcpparma_gaussian_sampling.cpp",
+                "line": 67,
+                "column": 14,
+                "hidden": false
+            },
+            {
+                "usr": "c:@F@C_GScirc#&$@N@arma@S@Col>#d#&$@N@arma@S@Mat>#d#&I#S4_#",
+                "kind": 6,
+                "parent_name": "",
+                "name": "C_GScirc(arma::vec &, arma::mat &, int &, int &)",
+                "file": "C:/Users/37810/OneDrive/UF/2023spring/capstone/Package/package2/GaussianSampling/src/rcpparma_gaussian_sampling.cpp",
+                "line": 94,
+                "column": 14,
+                "hidden": false
+            },
+            {
+                "usr": "c:@F@C_GSchol#&$@N@arma@S@Col>#d#&$@N@arma@S@Mat>#d#",
+                "kind": 6,
+                "parent_name": "",
+                "name": "C_GSchol(arma::vec &, arma::mat &)",
+                "file": "C:/Users/37810/OneDrive/UF/2023spring/capstone/Package/package2/GaussianSampling/src/rcpparma_gaussian_sampling.cpp",
+                "line": 124,
+                "column": 14,
+                "hidden": false
+            },
+            {
+                "usr": "c:@F@C_GSsqrt#&$@N@arma@S@Col>#d#&$@N@arma@S@Mat>#d#",
+                "kind": 6,
+                "parent_name": "",
+                "name": "C_GSsqrt(arma::vec &, arma::mat &)",
+                "file": "C:/Users/37810/OneDrive/UF/2023spring/capstone/Package/package2/GaussianSampling/src/rcpparma_gaussian_sampling.cpp",
+                "line": 150,
+                "column": 14,
+                "hidden": false
+            },
+            {
+                "usr": "c:@F@C_GScheby#&$@N@arma@S@Col>#d#&$@N@arma@S@Mat>#d#&f#",
+                "kind": 6,
+                "parent_name": "",
+                "name": "C_GScheby(arma::vec &, arma::mat &, float &)",
+                "file": "C:/Users/37810/OneDrive/UF/2023spring/capstone/Package/package2/GaussianSampling/src/rcpparma_gaussian_sampling.cpp",
+                "line": 182,
+                "column": 14,
+                "hidden": false
+            },
+            {
+                "usr": "c:@F@C_GSlanczos#&$@N@arma@S@Col>#d#&$@N@arma@S@Mat>#d#&d#",
+                "kind": 6,
+                "parent_name": "",
+                "name": "C_GSlanczos(arma::vec &, arma::mat &, double &)",
+                "file": "C:/Users/37810/OneDrive/UF/2023spring/capstone/Package/package2/GaussianSampling/src/rcpparma_gaussian_sampling.cpp",
+                "line": 236,
+                "column": 14,
+                "hidden": false
+            },
+            {
+                "usr": "c:@F@C_GSCG#&$@N@arma@S@Col>#d#&$@N@arma@S@Mat>#d#&d#S0_#",
+                "kind": 6,
+                "parent_name": "",
+                "name": "C_GSCG(arma::vec &, arma::mat &, double &, arma::vec &)",
+                "file": "C:/Users/37810/OneDrive/UF/2023spring/capstone/Package/package2/GaussianSampling/src/rcpparma_gaussian_sampling.cpp",
+                "line": 293,
+                "column": 14,
+                "hidden": false
+            },
+            {
+                "usr": "c:@F@C_GSgibbs#&$@N@arma@S@Col>#d#&$@N@arma@S@Mat>#d#&I#S0_#",
+                "kind": 6,
+                "parent_name": "",
+                "name": "C_GSgibbs(arma::vec &, arma::mat &, int &, arma::vec &)",
+                "file": "C:/Users/37810/OneDrive/UF/2023spring/capstone/Package/package2/GaussianSampling/src/rcpparma_gaussian_sampling.cpp",
+                "line": 359,
+                "column": 14,
+                "hidden": false
+            },
+            {
+                "usr": "c:@F@C_GSMS#&$@N@arma@S@Col>#d#&$@N@arma@S@Mat>#d#&I#S0_#S4_#",
+                "kind": 6,
+                "parent_name": "",
+                "name": "C_GSMS(arma::vec &, arma::mat &, int &, arma::vec &, int &)",
+                "file": "C:/Users/37810/OneDrive/UF/2023spring/capstone/Package/package2/GaussianSampling/src/rcpparma_gaussian_sampling.cpp",
+                "line": 397,
+                "column": 14,
+                "hidden": false
+            },
+            {
+                "usr": "c:@F@C_GSMS_ssor#&$@N@arma@S@Col>#d#&$@N@arma@S@Mat>#d#&I#S0_#",
+                "kind": 6,
+                "parent_name": "",
+                "name": "C_GSMS_ssor(arma::vec &, arma::mat &, int &, arma::vec &)",
+                "file": "C:/Users/37810/OneDrive/UF/2023spring/capstone/Package/package2/GaussianSampling/src/rcpparma_gaussian_sampling.cpp",
+                "line": 522,
+                "column": 14,
+                "hidden": false
+            },
+            {
+                "usr": "c:@F@C_GSAMS#&$@N@arma@S@Col>#d#&$@N@arma@S@Mat>#d#&I#S0_#&d#S4_#",
+                "kind": 6,
+                "parent_name": "",
+                "name": "C_GSAMS(arma::vec &, arma::mat &, int &, arma::vec &, double &, int &)",
+                "file": "C:/Users/37810/OneDrive/UF/2023spring/capstone/Package/package2/GaussianSampling/src/rcpparma_gaussian_sampling.cpp",
+                "line": 620,
+                "column": 14,
+                "hidden": false
+            },
+            {
+                "usr": "c:@F@C_GSDA#&$@N@arma@S@Col>#d#&$@N@arma@S@Mat>#d#S2_#S2_#&I#S0_#S4_#&d#",
+                "kind": 6,
+                "parent_name": "",
+                "name": "C_GSDA(arma::vec &, arma::mat &, arma::mat &, arma::mat &, int &, arma::vec &, int &, double &)",
+                "file": "C:/Users/37810/OneDrive/UF/2023spring/capstone/Package/package2/GaussianSampling/src/rcpparma_gaussian_sampling.cpp",
+                "line": 685,
+                "column": 14,
+                "hidden": false
+            }
+        ],
+        "hidden": false
+    }
+]
