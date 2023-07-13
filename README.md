@@ -1,2 +1,2 @@
-# GaussianSampling
- high-dimensional guassian sampling using r
+High-dimensional Gaussian sampling using R
+ 
