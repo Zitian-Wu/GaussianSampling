@@ -1,0 +1,21 @@
+---
+title: "Example-Imageblurring"
+author: "Zitian Wu"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Example-Imageblurring}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+
+## To install the package
+Run following codes in console to install the package 'GaussianSamplin'.
+```{r, results='asis', eval=FALSE}
+install.packages("devtools")
+library(devtools)
+install_github("Zitian-Wu/GaussianSampling")
+```
+
+
