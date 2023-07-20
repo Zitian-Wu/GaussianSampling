@@ -9,3 +9,9 @@ install.packages("devtools")
 library(devtools)
 install_github("Zitian-Wu/GaussianSampling")
 ```
+
+## Example of Image Blurring
+Run following codes in console after installation.
+```{r, results='asis', eval=FALSE}
+browseVignettes("GaussianSampling")
+```
