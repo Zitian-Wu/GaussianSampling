@@ -5,7 +5,7 @@ Version: 1.0
 Date: 2023-04-06
 Author: Zitian Wu
 Maintainer: Zitian <zitianwu@ufl.edu>
-Description: Based on the algorithm in, arXiv:2010.01510 [stat.CO].
+Description: Based on the algorithm in, https://doi.org/10.1137/20M1371026.
 License: GPL-2
 Encoding: UTF-8
 LazyData: true
