@@ -11,13 +11,13 @@
         "-DEIGEN_DONT_VECTORIZE",
         "-I/Library/Developer/CommandLineTools/usr/lib/clang/13.1.6/include",
         "-I/Library/Developer/CommandLineTools/SDKs/MacOSX12.sdk/usr/include/c++/v1",
-        "-I/opt/homebrew/Cellar/llvm/15.0.1/lib/clang/15.0.1/include",
+        "-I/opt/homebrew/Cellar/llvm/16.0.5/lib/clang/16/include",
         "-I/Library/Developer/CommandLineTools/SDKs/MacOSX12.sdk/usr/include"
     ],
     "pch": "RcppArmadillo",
     "is_cpp": true,
-    "hash": "1664243965168082822516808103301680810330",
-    "compiler": "9389983819974159266",
+    "hash": "1664243965168925786216892578621689257862",
+    "compiler": "5994158251534110017",
     "rversion": "4.2.1",
     "dbversion": 4
 }

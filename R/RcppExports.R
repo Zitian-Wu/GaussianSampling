@@ -213,9 +213,9 @@ GSAMS <- function(mu, Q, total_itr, theta0, omega, method) {
 #' MCMC samplers whose invariant distributions are approximations
 #'
 #' @param mu mu is mean, d-dimensional.
-#' @param Q1: Q = Q1 + Q2.
-#' @param G1,Lambda1 Q1 = G1T * Lambda1 * G1
-#' @param Lambda1: Q1 = G1T * Lambda1 * G1
+#' @param Q1 Q = Q1 + Q2.
+#' @param G1 Q1 = G1T * Lambda1 * G1
+#' @param Lambda1 Q1 = G1T * Lambda1 * G1
 #' @param total_itr total_itr is the total itration of Gibbs sampler
 #' @param theta0 theta0 is initialization.
 #' @param method method is matrix splitting approach to choose within "EDA" and "GEDA".
