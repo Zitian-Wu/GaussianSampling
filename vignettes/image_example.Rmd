@@ -72,7 +72,7 @@ Qix <- function(q,x) {
 ## image preview
 
 Import png
-```{r}
+```{r eval=TRUE}
 library(png)
 # testdata <- readPNG("C:/Users/37810/OneDrive/UF/2023spring/others/meeting/0307_convolution/Florida_Gators_gator_logo.svg.png")
 # testdata <- readPNG("/Users/zitian/Library/CloudStorage/OneDrive-Personal/UF/2023spring/others/meeting/0307_convolution/Florida_Gators_gator_logo.svg.png")
@@ -203,6 +203,7 @@ las2 <- glmnet(S, y_s, lambda = las$lambda.min)
 pred_las2 <- predict.glmnet(las2, S)
 sigmahat <- sd(pred_las2 - y_s)
 
+library(fields)
 for (i in 1:Totalitr) {
   t1 <- Sys.time()
   
@@ -215,25 +216,25 @@ for (i in 1:Totalitr) {
   # sigmam[i] <- sigma
 
   
-  # a <- 1/rgamma(1, 1 + len_s/2, err[i]/2)
-  # gen <- sigma
-  # 
-  # D_check <- dcauchy(sqrt(a),0, sigmahat, log=T)-dcauchy(sqrt(sigma),0, sigmahat, log=T)
-  # 
-  # u <- runif(1)
-  # 
-  # if(log(u) < D_check){ 
-  #   gen <- a
-  # }
-  # sigma <- gen
+  a <- 1/rgamma(1, 1 + len_s/2, err[i]/2)
+  gen <- sigma
+
+  D_check <- dcauchy(sqrt(a),0, sigmahat, log=T)-dcauchy(sqrt(sigma),0, sigmahat, log=T)
+
+  u <- runif(1)
+
+  if(log(u) < D_check){
+    gen <- a
+  }
+  sigma <- gen
   
   print(sigma)
   
   # sample sigma with half cauchy prior
-  a <- 1 / rgamma(1, 1/2, 1/sigmahat^2)
-  alpha <- 1/2
-  eta <- 1/a
-  sigma <- 1 / rgamma(1, alpha + len_s/2, eta + sum((y_s-Qx(s1, thetaold))^2)/2)
+  # a <- 1 / rgamma(1, 1/2, 1/sigmahat^2)
+  # alpha <- 1/2
+  # eta <- 1/a
+  # sigma <- 1 / rgamma(1, alpha + len_s/2, eta + sum((y_s-Qx(s1, thetaold))^2)/2)
 
   # update mu
   mu <- y_s / sigma
