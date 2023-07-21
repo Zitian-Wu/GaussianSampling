@@ -11,7 +11,8 @@ install_github("Zitian-Wu/GaussianSampling")
 ```
 
 ## Example of Image Blurring
-Run following codes in console after installation.
+Run following codes in console instead.
 ```{r, results='asis', eval=FALSE}
+install_github("Zitian-Wu/GaussianSampling", build_vignettes = TRUE)
 browseVignettes("GaussianSampling")
 ```
