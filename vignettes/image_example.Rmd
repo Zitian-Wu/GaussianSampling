@@ -228,7 +228,7 @@ for (i in 1:Totalitr) {
   }
   sigma <- gen
   
-  print(sigma)
+  # print(sigma)
   
   # sample sigma with half cauchy prior
   # a <- 1 / rgamma(1, 1/2, 1/sigmahat^2)
